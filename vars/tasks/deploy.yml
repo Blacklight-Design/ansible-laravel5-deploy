@@ -1,0 +1,35 @@
+# Deployment role for Laravel4 apps.
+# Brought to you by Blacklight - http://www.blacklight.co.za/.
+# Developer: Zander Janse van Rensburg <zjvren@geevcookie.com>
+# License: MIT
+#
+# Handles the deployment based on the strategy specified.
+---
+- name: Get local path.
+  local_action: shell pwd
+  register: local_path
+  ignore_errors: true
+
+- name: RSync deploy.
+  synchronize: src={{ local_path.stdout }}{{ laravel_local_root }} dest={{ laravel_root_dir }}/releases/{{ release_version.stdout }} times=no recursive=yes perms=no owner=no group=no
+  when: laravel_strategy == "rsync" and local_path|success
+  ignore_errors: true
+  register: deployed
+
+- name: Git deploy.
+  git: repo={{ laravel_repo }} dest={{ laravel_root_dir }}/releases/{{ release_version.stdout }} version={{ laravel_branch }}
+  when: laravel_strategy == "git" and local_path|success
+  ignore_errors: true
+  register: deployed
+
+- name: SVN deploy.
+  subversion: repo={{ laravel_repo }} dest={{ laravel_root_dir }}/releases/{{ release_version.stdout }} revision={{ laravel_branch }}
+  when: laravel_strategy == "svn" and local_path|success
+  ignore_errors: true
+  register: deployed
+
+- name: Mercurial deploy.
+  hg: repo={{ laravel_repo }} dest={{ laravel_root_dir }}/releases/{{ release_version.stdout }} revision={{ laravel_branch }}
+  when: laravel_strategy == "mercurial" and local_path|success
+  ignore_errors: true
+  register: deployed

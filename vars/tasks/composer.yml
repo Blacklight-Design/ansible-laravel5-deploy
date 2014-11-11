@@ -1,0 +1,30 @@
+# Deployment role for Laravel4 apps.
+# Brought to you by Blacklight - http://www.blacklight.co.za/.
+# Developer: Zander Janse van Rensburg <zjvren@geevcookie.com>
+# License: MIT
+#
+# Handles the download of composer and the install command.
+---
+- name: Check if composer needs to be downloaded.
+  stat: path={{ laravel_root_dir }}/composer.phar
+  register: composer_file
+  when: not laravel_composer_path
+  ignore_errors: true
+
+- name: Install composer
+  get_url: url=https://getcomposer.org/composer.phar dest={{ laravel_root_dir }}/composer.phar mode=0755 validate_certs=no
+  when: composer_file|success and not laravel_composer_path and not composer_file.stat.exists
+  ignore_errors: true
+  register: composer_installed
+
+- name: Run composer install using downloaded version.
+  shell: cd {{ laravel_root_dir }}/releases/{{ release_version.stdout }} && {{ laravel_php_path }} {{ laravel_root_dir }}/composer.phar install {{ laravel_composer_options }}
+  when: composer_installed|success and not laravel_composer_path
+  register: composer_install_complete
+  ignore_errors: true
+
+- name: Run composer install using global version.
+  shell: cd {{ laravel_root_dir }}/releases/{{ release_version.stdout }} && {{ laravel_composer_path }} install {{ laravel_composer_options }}
+  when: laravel_composer_path != false
+  register: composer_install_complete
+  ignore_errors: true

@@ -1,0 +1,61 @@
+# Deployment role for Laravel4 apps.
+# Brought to you by Blacklight - http://www.blacklight.co.za/.
+# Developer: Zander Janse van Rensburg <zjvren@geevcookie.com>
+# License: MIT
+---
+- name: Create deployment directory.
+  include: directory.yml
+
+- name: Deploy the code.
+  include: deploy.yml
+
+- name: Cleanup on deployment failure.
+  shell: rm -fr {{ laravel_root_dir }}/releases/{{ release_version.stdout }}
+  when: deployed|failed
+
+- name: Check if processing needs to continue.
+  fail: Code could not be deployed!
+  when: deployed|failed
+
+- name: Create symlinks.
+  include: symlinks.yml
+
+- name: Cleanup on symlinks failure.
+  shell: rm -fr {{ laravel_root_dir }}/releases/{{ release_version.stdout }}
+  when: symlinks_created|failed
+
+- name: Check if processing needs to continue.
+  fail: Symlinks could not be created!
+  when: symlinks_created|failed
+
+- name: Run Composer.
+  include: composer.yml
+
+- name: Cleanup on Composer failure.
+  shell: rm -fr {{ laravel_root_dir }}/releases/{{ release_version.stdout }}
+  when: composer_install_complete|failed
+
+- name: Check if processing needs to continue.
+  fail: Composer install failed!
+  when: composer_install_complete|failed
+
+- name: Dump assets.
+  shell: cd {{ laravel_root_dir }}/releases/{{ release_version.stdout }} && {{ laravel_php_path }} app/console assetic:dump --env={{ laravel_env }} {{ laravel_asset_options }}
+  register: dump_assets
+  ignore_errors: true
+
+- name: Create symlink to newest release.
+  file: state=link src={{ laravel_root_dir }}/releases/{{ release_version.stdout }} path={{ laravel_root_dir }}/current
+  register: current_symlink
+  ignore_errors: true
+
+- name: Cleanup on final steps failure.
+  shell: rm -fr {{ laravel_root_dir }}/releases/{{ release_version.stdout }}
+  when: dump_assets|failed or current_symlink|failed
+
+- name: Check if processing needs to continue.
+  fail: Could not finish off final steps!
+  when: dump_assets|failed or current_symlink|failed
+
+- name: Run cleanup of old releases.
+  shell: ls -dr {{ laravel_root_dir }}/releases/* | tail -n +{{ laravel_releases + 1 }} | xargs rm -fr

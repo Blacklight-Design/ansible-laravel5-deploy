@@ -1,0 +1,10 @@
+---
+galaxy_info:
+  author: Zander Janse van Rensburg
+  description: Deployment role for Laravel4 apps.
+  license: MIT
+  min_ansible_version: 1.2
+  categories:
+    - development
+    - web
+dependencies: []

@@ -1,0 +1,59 @@
+# Deployment role for Laravel4 apps.
+# Brought to you by Blacklight - http://www.blacklight.co.za/.
+# Developer: Zander Janse van Rensburg <zjvren@geevcookie.com>
+# License: MIT
+#
+# This file handles the creation of symlinks to the new release.
+---
+- name: Check if the sessions directory exists
+  stat: path={{ laravel_root_dir }}/releases/{{ release_version.stdout }}/app/storage/sessions
+  register: sessions_path
+  ignore_errors: true
+
+- name: Delete session directory
+  shell: rm -fr {{ laravel_root_dir }}/releases/{{ release_version.stdout }}/app/storage/sessions
+  when: sessions_path|success and sessions_path.stat.exists
+  register: session_directory_deleted
+  ignore_errors: true
+
+- name: Create session symlink
+  file: state=link src={{ laravel_root_dir }}/shared/app/storage/sessions path={{ laravel_root_dir }}/releases/{{ release_version.stdout }}/app/storage/sessions
+  when: session_directory_deleted|success or session_directory_deleted|skipped
+  register: sessions_symlink
+  ignore_errors: true
+
+- name: Check if logs directory exists
+  stat: path={{ laravel_root_dir }}/releases/{{ release_version.stdout }}/app/storage/logs
+  register: logs_path
+  when: sessions_symlink|success
+  ignore_errors: true
+
+- name: Delete logs directory
+  shell: rm -fr {{ laravel_root_dir }}/releases/{{ release_version.stdout }}/app/storage/logs
+  when: logs_path|success and logs_path.stat.exists
+  register: logs_directory_deleted
+  ignore_errors: true
+
+- name: Create logs symlink
+  file: state=link src={{ laravel_root_dir }}/shared/app/storage/logs path={{ laravel_root_dir }}/releases/{{ release_version.stdout }}/app/storage/logs
+  when: logs_directory_deleted|success or logs_directory_deleted|skipped
+  register: logs_symlink
+  ignore_errors: true
+
+- name: Check if uploads directory exists
+  stat: path={{ laravel_root_dir }}/releases/{{ release_version.stdout }}/public/uploads
+  register: uploads_path
+  when: logs_symlink|success
+  ignore_errors: true
+
+- name: Delete uploads directory
+  shell: rm -fr {{ laravel_root_dir }}/releases/{{ release_version.stdout }}/public/uploads
+  when: uploads_path|success and uploads_path.stat.exists
+  register: uploads_path_deleted
+  ignore_errors: true
+
+- name: Create uploads symlink
+  file: state=link src={{ laravel_root_dir }}/shared/public/uploads path={{ laravel_root_dir }}/releases/{{ release_version.stdout }}/public/uploads
+  when: uploads_path_deleted|success or uploads_path_deleted|skipped
+  register: symlinks_created
+  ignore_errors: true

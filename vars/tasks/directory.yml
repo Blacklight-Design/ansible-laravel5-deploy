@@ -1,0 +1,25 @@
+# Deployment role for Laravel4 apps.
+# Brought to you by Blacklight - http://www.blacklight.co.za/.
+# Developer: Zander Janse van Rensburg <zjvren@geevcookie.com>
+# License: MIT
+#
+# Handles the creation of the deployment and shared directories.
+---
+- name: Get release version.
+  shell: date +%s
+  register: release_version
+
+- name: Create the shared directory.
+  file: state=directory path={{ laravel_root_dir }}/shared
+
+- name: Create the shared app/storage/logs directory.
+  file: state=directory path={{ laravel_root_dir }}/shared/app/storage/logs
+
+- name: Create the shared app/storage/sessions directory.
+  file: state=directory path={{ laravel_root_dir }}/shared/app/storage/sessions
+
+- name: Create the shared public/uploads directory.
+  file: state=directory path={{ laravel_root_dir }}/shared/public/uploads
+
+- name: Create the release directory.
+  file: state=directory path={{ laravel_root_dir }}/releases/{{ release_version.stdout }}

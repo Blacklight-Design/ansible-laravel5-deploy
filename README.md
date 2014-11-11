@@ -1,4 +1,4 @@
-# Laravel4 Deploy
+# Laravel5 Deploy
 
 Brought to you by [Blacklight](http://www.blacklight.co.za).
 

@@ -23,8 +23,8 @@ project
 The role also has error checking in place. If any of the steps fail the role will delete the newly created release folder
 and stop execution. If the deploy was successful the role will remove old releases.
 
-Other Deloyment Roles
----------------------
+Other Deployment Roles
+----------------------
 
 Symfony: [symfony-deploy](https://galaxy.ansible.com/list#/roles/2111)
 
